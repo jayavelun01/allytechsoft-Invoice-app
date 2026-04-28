@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-mist text-ink font-sans antialiased;
+  }
+  ::selection {
+    @apply bg-brandBlue text-white;
+  }
+
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+}
+
+@layer components {
+  .input-base {
+    @apply w-full bg-white border border-soft rounded-lg px-3 py-2 text-sm text-ink
+           placeholder:text-mute/70
+           focus:outline-none focus:border-brandBlue focus:ring-2 focus:ring-brandBlue/15
+           transition-all duration-150;
+  }
+
+  .label-base {
+    @apply block text-xs font-medium tracking-wide text-ash mb-1.5;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm
+           font-medium transition-all duration-150 select-none;
+  }
+  .btn-primary {
+    @apply btn bg-ink text-white hover:bg-brandBlue;
+  }
+  .btn-gradient {
+    @apply btn bg-brand-gradient text-white hover:opacity-90;
+  }
+  .btn-ghost {
+    @apply btn text-ash hover:bg-ice hover:text-ink;
+  }
+  .btn-outline {
+    @apply btn border border-soft bg-white text-ink hover:bg-ice;
+  }
+  .btn-danger {
+    @apply btn text-danger hover:bg-danger/10;
+  }
+
+  .card {
+    @apply bg-white border border-soft/60 rounded-2xl shadow-soft;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+}
+
+@layer utilities {
+  .hairline {
+    @apply border-soft/70;
+  }
+
+  .text-brand-gradient {
+    background: linear-gradient(135deg, #1e5fa5 0%, #2ca8a8 50%, #5eb33c 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+}
+
+/* ============== PRINT STYLES ============== */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 12mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .no-print,
+  .no-print * {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .invoice-print {
+    background: #ffffff !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  .invoice-print * {
+    box-shadow: none !important;
+  }
+}
