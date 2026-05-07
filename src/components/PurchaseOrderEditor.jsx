@@ -41,11 +41,15 @@ export default function PurchaseOrderEditor({ data, ops, editingId, onNav }) {
       : { productId: '' })
   }
 
-  const save = async () => {
+  const save = async (alsoView = false) => {
     if (!draft.number.trim()) { alert('PO number is required.'); return }
     if (!draft.customerId) { alert('Please choose a customer.'); return }
     setSaving(true)
-    try { await ops.savePurchaseOrder(draft); onNav('purchase-orders') }
+    try {
+      await ops.savePurchaseOrder(draft)
+      if (alsoView) onNav('po-view', draft.id)
+      else onNav('purchase-orders')
+    }
     catch (e) { alert('Could not save: ' + e.message) }
     finally { setSaving(false) }
   }
@@ -56,7 +60,8 @@ export default function PurchaseOrderEditor({ data, ops, editingId, onNav }) {
         title={isNew ? 'New Purchase Order' : `Edit ${draft.number}`}
         actions={<>
           <button className="btn-ghost" onClick={() => onNav('purchase-orders')} disabled={saving}>Cancel</button>
-          <button className="btn-primary" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
+          <button className="btn-outline" onClick={() => save(false)} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
+          <button className="btn-gradient" onClick={() => save(true)} disabled={saving}>Save &amp; view</button>
         </>}
       />
 

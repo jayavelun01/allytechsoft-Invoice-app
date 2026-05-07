@@ -12,8 +12,10 @@ import InvoiceEditor from './components/InvoiceEditor'
 import InvoiceView from './components/InvoiceView'
 import PurchaseOrders from './components/PurchaseOrders'
 import PurchaseOrderEditor from './components/PurchaseOrderEditor'
+import PurchaseOrderView from './components/PurchaseOrderView'
 import DeliveryChallans from './components/DeliveryChallans'
 import DeliveryChallanEditor from './components/DeliveryChallanEditor'
+import DeliveryChallanView from './components/DeliveryChallanView'
 import Settings from './components/Settings'
 import LoginPage from './components/LoginPage'
 
@@ -73,8 +75,8 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
   const openInvoice = (id) => navigate('invoice-view', id)
-  const openPO = (id) => navigate('po-edit', id)
-  const openDC = (id) => navigate('dc-edit', id)
+  const openPO = (id) => navigate('po-view', id)
+  const openDC = (id) => navigate('dc-view', id)
 
   const ops = {
     // Branches
@@ -183,6 +185,9 @@ export default function App() {
           {view === 'po-edit' && (
             <PurchaseOrderEditor data={data} ops={ops} editingId={selectedId} onNav={navigate} />
           )}
+          {view === 'po-view' && (
+            <PurchaseOrderView data={data} poId={selectedId} onNav={navigate} />
+          )}
 
           {view === 'delivery-challans' && (
             <DeliveryChallans data={data} ops={ops} onNav={navigate} onOpen={openDC} />
@@ -192,6 +197,9 @@ export default function App() {
           )}
           {view === 'dc-edit' && (
             <DeliveryChallanEditor data={data} ops={ops} editingId={selectedId} onNav={navigate} />
+          )}
+          {view === 'dc-view' && (
+            <DeliveryChallanView data={data} dcId={selectedId} onNav={navigate} />
           )}
 
           {view === 'customers' && <Customers data={data} ops={ops} />}

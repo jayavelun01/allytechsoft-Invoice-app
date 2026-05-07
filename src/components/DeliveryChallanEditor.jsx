@@ -54,11 +54,15 @@ export default function DeliveryChallanEditor({ data, ops, editingId, onNav }) {
     }))
   }
 
-  const save = async () => {
+  const save = async (alsoView = false) => {
     if (!draft.number.trim()) { alert('DC number is required.'); return }
     if (!draft.customerId) { alert('Please choose a customer.'); return }
     setSaving(true)
-    try { await ops.saveDeliveryChallan(draft); onNav('delivery-challans') }
+    try {
+      await ops.saveDeliveryChallan(draft)
+      if (alsoView) onNav('dc-view', draft.id)
+      else onNav('delivery-challans')
+    }
     catch (e) { alert('Could not save: ' + e.message) }
     finally { setSaving(false) }
   }
@@ -69,7 +73,8 @@ export default function DeliveryChallanEditor({ data, ops, editingId, onNav }) {
         title={isNew ? 'New Delivery Challan' : `Edit ${draft.number}`}
         actions={<>
           <button className="btn-ghost" onClick={() => onNav('delivery-challans')} disabled={saving}>Cancel</button>
-          <button className="btn-primary" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
+          <button className="btn-outline" onClick={() => save(false)} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
+          <button className="btn-gradient" onClick={() => save(true)} disabled={saving}>Save &amp; view</button>
         </>}
       />
 
