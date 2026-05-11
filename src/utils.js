@@ -110,6 +110,22 @@ export const plusDaysISO = (n) => {
   return new Date(d - off).toISOString().slice(0, 10)
 }
 
+/**
+ * GSTIN: 15-char. Format: 2-digit state code + 5 uppercase letters + 4 digits +
+ * 1 uppercase letter + 1 alphanumeric (1-9/A-Z) + literal "Z" + 1 alphanumeric.
+ * Returns true for empty (field is optional).
+ */
+export const validateGSTIN = (gstin) => {
+  if (!gstin) return true
+  return /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(gstin)
+}
+
+/** E-Way Bill number: exactly 12 digits. Returns true for empty (optional field). */
+export const validateEWayBill = (ewb) => {
+  if (!ewb) return true
+  return /^[0-9]{12}$/.test(ewb)
+}
+
 /** Identify Indian financial year for a date (Apr 1 - Mar 31). */
 export const fyOf = (iso) => {
   if (!iso) return null

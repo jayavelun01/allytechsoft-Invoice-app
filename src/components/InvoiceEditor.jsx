@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { newId, blankInvoice, blankInvoiceItem, formatNumber } from '../store'
-import { fmtMoney, calcInvoice, calcItemGst } from '../utils'
+import { fmtMoney, calcInvoice, calcItemGst, validateEWayBill } from '../utils'
 import { PageHeader } from './ui'
 import { GST_SLABS, UNITS, INDIAN_STATES } from '../constants'
 
@@ -120,6 +120,7 @@ export default function InvoiceEditor({ data, ops, editingId, onNav, onOpenInvoi
     if (!draft.items.some((i) => (i.description || '').trim())) {
       alert('Please add at least one line item.'); return
     }
+    if (!validateEWayBill(draft.eWayBillNumber)) { alert('E-Way Bill number must be exactly 12 digits.'); return }
     setSaving(true)
     try {
       // Compute GST splits per line at save-time so they're persisted
@@ -395,6 +396,14 @@ export default function InvoiceEditor({ data, ops, editingId, onNav, onOpenInvoi
               <Field label="LR date">
                 <input type="date" className="input-base" value={draft.lrDate || ''}
                   onChange={(e) => setDraft({ ...draft, lrDate: e.target.value })} />
+              </Field>
+              <Field label="E-Way Bill number">
+                <input className="input-base font-mono" value={draft.eWayBillNumber || ''}
+                  onChange={(e) => setDraft({ ...draft, eWayBillNumber: e.target.value.replace(/\D/g, '').slice(0, 12) })}
+                  placeholder="12-digit number" maxLength={12} />
+                {draft.eWayBillNumber && !validateEWayBill(draft.eWayBillNumber) && (
+                  <p className="text-xs text-danger mt-1">Must be exactly 12 digits</p>
+                )}
               </Field>
               <Field label="Signing authority">
                 <input className="input-base" value={draft.signingAuthority}
