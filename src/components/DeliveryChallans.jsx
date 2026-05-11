@@ -60,7 +60,8 @@ export default function DeliveryChallans({ data, ops, onNav, onOpen }) {
                       <td className="px-6 py-3.5 font-mono text-[13px]">{dc.lrNumber || '—'}</td>
                       <td className="px-6 py-3.5"><StatusPill status={dc.status} statusMeta={statusMeta} /></td>
                       <td className="px-6 py-3.5 text-right whitespace-nowrap">
-                        <button onClick={() => onNav('dc-edit', dc.id)} className="text-brandBlue text-sm hover:underline mr-3">Edit</button>
+                        <button onClick={() => onOpen(dc.id)} className="text-brandBlue text-sm hover:underline mr-3">Open</button>
+                        <button onClick={() => onNav('dc-edit', dc.id)} className="text-ash text-sm hover:underline mr-3">Edit</button>
                         <button onClick={() => remove(dc.id)} className="text-danger text-sm hover:underline">Delete</button>
                       </td>
                     </tr>

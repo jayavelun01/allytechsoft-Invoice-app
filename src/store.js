@@ -54,6 +54,7 @@ export const blankInvoice = (data) => {
     lrNumber: '',
     lrDate: '',
     deliveryMode: '',
+    eWayBillNumber: '',
     createdAt: new Date().toISOString(),
   }
 }
@@ -101,6 +102,7 @@ export const blankDeliveryChallan = () => ({
   lrNumber: '',
   lrDate: '',
   deliveryMode: '',
+  eWayBillNumber: '',
   items: [blankDCItem()],
   notes: '',
   status: 'open',

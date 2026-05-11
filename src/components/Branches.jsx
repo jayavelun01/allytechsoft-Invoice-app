@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Modal, PageHeader, Empty } from './ui'
 import { INDIAN_STATES } from '../constants'
+import { validateGSTIN } from '../utils'
 
 export default function Branches({ data, ops }) {
   const [editing, setEditing] = useState(null)
@@ -15,6 +16,7 @@ export default function Branches({ data, ops }) {
 
   const save = async () => {
     if (!editing.name.trim()) { alert('Branch name is required.'); return }
+    if (!validateGSTIN(editing.gstin)) { alert('GSTIN format is invalid. Expected format: 22AAAAA0000A1Z5'); return }
     setSaving(true)
     try {
       await ops.saveBranch(editing)
@@ -106,6 +108,9 @@ export default function Branches({ data, ops }) {
               <Field label="GSTIN">
                 <input className="input-base font-mono uppercase" value={editing.gstin}
                   onChange={(e) => setEditing({ ...editing, gstin: e.target.value.toUpperCase() })} placeholder="33AAAAA0000A1Z5" />
+                {editing.gstin && !validateGSTIN(editing.gstin) && (
+                  <p className="text-xs text-danger mt-1">Invalid GSTIN — expected 15 chars, e.g. 33AAAAA0000A1Z5</p>
+                )}
               </Field>
             </div>
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { fmtDate } from '../utils'
+import { fmtDate, validateGSTIN } from '../utils'
 import { Modal, PageHeader, Empty } from './ui'
 import { INDIAN_STATES } from '../constants'
 
@@ -21,6 +21,7 @@ export default function Customers({ data, ops }) {
 
   const save = async () => {
     if (!editing.name.trim()) { alert('Customer name is required.'); return }
+    if (!validateGSTIN(editing.gstin)) { alert('GSTIN format is invalid. Expected format: 22AAAAA0000A1Z5'); return }
     setSaving(true)
     try { await ops.saveCustomer(editing); setEditing(null) }
     catch (e) { alert('Could not save: ' + e.message) }
@@ -119,6 +120,9 @@ export default function Customers({ data, ops }) {
               <Field label="GSTIN">
                 <input className="input-base font-mono uppercase" value={editing.gstin}
                   onChange={(e) => setEditing({ ...editing, gstin: e.target.value.toUpperCase() })} placeholder="33AAAAA0000A1Z5" />
+                {editing.gstin && !validateGSTIN(editing.gstin) && (
+                  <p className="text-xs text-danger mt-1">Invalid GSTIN — expected 15 chars, e.g. 33AAAAA0000A1Z5</p>
+                )}
               </Field>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
@@ -175,6 +179,7 @@ function BranchesManager({ customer, data, ops, onClose }) {
 
   const save = async () => {
     if (!editing.name.trim()) { alert('Branch name is required.'); return }
+    if (!validateGSTIN(editing.gstin)) { alert('GSTIN format is invalid. Expected format: 22AAAAA0000A1Z5'); return }
     setSaving(true)
     try { await ops.saveCustomerBranch(editing); setEditing(null) }
     catch (e) { alert('Could not save: ' + e.message) }
@@ -249,7 +254,10 @@ function BranchesManager({ customer, data, ops, onClose }) {
               </Field>
               <Field label="GSTIN">
                 <input className="input-base font-mono uppercase" value={editing.gstin}
-                  onChange={(e) => setEditing({ ...editing, gstin: e.target.value.toUpperCase() })} />
+                  onChange={(e) => setEditing({ ...editing, gstin: e.target.value.toUpperCase() })} placeholder="33AAAAA0000A1Z5" />
+                {editing.gstin && !validateGSTIN(editing.gstin) && (
+                  <p className="text-xs text-danger mt-1">Invalid GSTIN — expected 15 chars, e.g. 33AAAAA0000A1Z5</p>
+                )}
               </Field>
             </div>
             <Field label="Address">

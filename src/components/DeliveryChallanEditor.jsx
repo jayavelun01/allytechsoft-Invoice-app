@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { newId, blankDeliveryChallan, blankDCItem } from '../store'
 import { PageHeader } from './ui'
 import { UNITS } from '../constants'
+import { validateEWayBill } from '../utils'
 
 export default function DeliveryChallanEditor({ data, ops, editingId, onNav }) {
   const isNew = !editingId
@@ -54,11 +55,16 @@ export default function DeliveryChallanEditor({ data, ops, editingId, onNav }) {
     }))
   }
 
-  const save = async () => {
+  const save = async (alsoView = false) => {
     if (!draft.number.trim()) { alert('DC number is required.'); return }
     if (!draft.customerId) { alert('Please choose a customer.'); return }
+    if (!validateEWayBill(draft.eWayBillNumber)) { alert('E-Way Bill number must be exactly 12 digits.'); return }
     setSaving(true)
-    try { await ops.saveDeliveryChallan(draft); onNav('delivery-challans') }
+    try {
+      await ops.saveDeliveryChallan(draft)
+      if (alsoView) onNav('dc-view', draft.id)
+      else onNav('delivery-challans')
+    }
     catch (e) { alert('Could not save: ' + e.message) }
     finally { setSaving(false) }
   }
@@ -69,7 +75,8 @@ export default function DeliveryChallanEditor({ data, ops, editingId, onNav }) {
         title={isNew ? 'New Delivery Challan' : `Edit ${draft.number}`}
         actions={<>
           <button className="btn-ghost" onClick={() => onNav('delivery-challans')} disabled={saving}>Cancel</button>
-          <button className="btn-primary" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
+          <button className="btn-outline" onClick={() => save(false)} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
+          <button className="btn-gradient" onClick={() => save(true)} disabled={saving}>Save &amp; view</button>
         </>}
       />
 
@@ -135,6 +142,14 @@ export default function DeliveryChallanEditor({ data, ops, editingId, onNav }) {
             <Field label="LR date">
               <input type="date" className="input-base" value={draft.lrDate || ''}
                 onChange={(e) => setDraft({ ...draft, lrDate: e.target.value })} />
+            </Field>
+            <Field label="E-Way Bill number">
+              <input className="input-base font-mono" value={draft.eWayBillNumber || ''}
+                onChange={(e) => setDraft({ ...draft, eWayBillNumber: e.target.value.replace(/\D/g, '').slice(0, 12) })}
+                placeholder="12-digit number" maxLength={12} />
+              {draft.eWayBillNumber && !validateEWayBill(draft.eWayBillNumber) && (
+                <p className="text-xs text-danger mt-1">Must be exactly 12 digits</p>
+              )}
             </Field>
           </div>
         </div>

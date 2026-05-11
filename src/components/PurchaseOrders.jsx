@@ -65,7 +65,8 @@ export default function PurchaseOrders({ data, ops, onNav, onOpen }) {
                       <td className="px-6 py-3.5"><StatusPill status={po.status} statusMeta={statusMeta} /></td>
                       <td className="px-6 py-3.5 text-right font-medium">{fmtMoney(totalOf(po), data.settings.currency)}</td>
                       <td className="px-6 py-3.5 text-right whitespace-nowrap">
-                        <button onClick={() => onNav('po-edit', po.id)} className="text-brandBlue text-sm hover:underline mr-3">Edit</button>
+                        <button onClick={() => onOpen(po.id)} className="text-brandBlue text-sm hover:underline mr-3">Open</button>
+                        <button onClick={() => onNav('po-edit', po.id)} className="text-ash text-sm hover:underline mr-3">Edit</button>
                         <button onClick={() => remove(po.id)} className="text-danger text-sm hover:underline">Delete</button>
                       </td>
                     </tr>
