@@ -91,6 +91,8 @@ export const statusMeta = (status) => {
     open:      { label: 'Open',      cls: 'bg-brandBlue/10 text-brandBlue' },
     closed:    { label: 'Closed',    cls: 'bg-success/10 text-brandGreenDark' },
     delivered: { label: 'Delivered', cls: 'bg-success/10 text-brandGreenDark' },
+    issued:    { label: 'Issued',    cls: 'bg-brandBlue/10 text-brandBlue' },
+    received:  { label: 'Received',  cls: 'bg-success/10 text-brandGreenDark' },
   }
   return map[status] || map.draft
 }

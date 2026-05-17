@@ -17,6 +17,9 @@ export async function loadAll() {
     invoicesR, itemsR,
     posR, poItemsR,
     dcsR, dcItemsR,
+    cdnR, cdnItemsR,
+    ebR, ebItemsR,
+    vendorsR,
   ] = await Promise.all([
     supabase.from('companies').select('*').eq('user_id', userId).maybeSingle(),
     supabase.from('settings').select('*').eq('user_id', userId).maybeSingle(),
@@ -30,9 +33,14 @@ export async function loadAll() {
     supabase.from('purchase_order_items').select('*').eq('user_id', userId).order('position', { ascending: true }),
     supabase.from('delivery_challans').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
     supabase.from('delivery_challan_items').select('*').eq('user_id', userId).order('position', { ascending: true }),
+    supabase.from('credit_debit_notes').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+    supabase.from('credit_debit_note_items').select('*').eq('user_id', userId).order('position', { ascending: true }),
+    supabase.from('expense_bills').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+    supabase.from('expense_bill_items').select('*').eq('user_id', userId).order('position', { ascending: true }),
+    supabase.from('vendors').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
   ])
 
-  for (const r of [companyR, settingsR, branchesR, productsR, customersR, customerBranchesR, invoicesR, itemsR, posR, poItemsR, dcsR, dcItemsR]) {
+  for (const r of [companyR, settingsR, branchesR, productsR, customersR, customerBranchesR, invoicesR, itemsR, posR, poItemsR, dcsR, dcItemsR, cdnR, cdnItemsR, ebR, ebItemsR, vendorsR]) {
     if (r.error) throw r.error
   }
 
@@ -45,6 +53,8 @@ export async function loadAll() {
   const invoiceItemsByInv = groupBy(itemsR.data || [], 'invoice_id', mapInvoiceItem)
   const poItemsByPo       = groupBy(poItemsR.data || [], 'purchase_order_id', mapPOItem)
   const dcItemsByDc       = groupBy(dcItemsR.data || [], 'delivery_challan_id', mapDCItem)
+  const cdnItemsByNote    = groupBy(cdnItemsR.data || [], 'credit_debit_note_id', mapCDNItem)
+  const ebItemsByBill     = groupBy(ebItemsR.data || [], 'expense_bill_id', mapEBItem)
 
   return {
     company: mapCompany(company),
@@ -65,6 +75,15 @@ export async function loadAll() {
       ...mapDeliveryChallan(dc),
       items: dcItemsByDc[dc.id] || [],
     })),
+    creditDebitNotes: (cdnR.data || []).map((n) => ({
+      ...mapCreditDebitNote(n),
+      items: cdnItemsByNote[n.id] || [],
+    })),
+    expenseBills: (ebR.data || []).map((b) => ({
+      ...mapExpenseBill(b),
+      items: ebItemsByBill[b.id] || [],
+    })),
+    vendors: (vendorsR.data || []).map(mapVendor),
   }
 }
 
@@ -347,6 +366,186 @@ export async function deleteDeliveryChallan(id) {
 }
 
 /* ============================================================
+ * Credit / Debit Notes
+ * ============================================================ */
+
+export async function saveCreditDebitNote(note) {
+  const userId = await requireUserId()
+  const isUpdate = !!note.id && (await rowExists('credit_debit_notes', note.id, userId))
+  const id = note.id || newId()
+
+  const row = {
+    id,
+    user_id: userId,
+    note_type: note.noteType || 'credit',
+    number: note.number || '',
+    note_date: note.noteDate || null,
+    original_invoice_id: note.originalInvoiceId || null,
+    original_invoice_number: note.originalInvoiceNumber || '',
+    customer_id: note.customerId || null,
+    customer_branch_id: note.customerBranchId || null,
+    branch_id: note.branchId || null,
+    reason: note.reason || '',
+    gst_type: note.gstType || 'intra',
+    place_of_supply: note.placeOfSupply || '',
+    discount: Number(note.discount) || 0,
+    notes: note.notes || '',
+    status: note.status || 'draft',
+    signing_authority: note.signingAuthority || '',
+    created_at: note.createdAt || new Date().toISOString(),
+  }
+
+  const r1 = await supabase.from('credit_debit_notes').upsert(row)
+  if (r1.error) throw r1.error
+
+  if (isUpdate) {
+    const r2 = await supabase
+      .from('credit_debit_note_items')
+      .delete()
+      .eq('user_id', userId)
+      .eq('credit_debit_note_id', id)
+    if (r2.error) throw r2.error
+  }
+
+  if (note.items?.length) {
+    const itemRows = note.items.map((it, i) => ({
+      id: it.id || newId(),
+      credit_debit_note_id: id,
+      user_id: userId,
+      product_id: it.productId || null,
+      description: it.description || '',
+      hsn_code: it.hsnCode || '',
+      unit: it.unit || 'Nos',
+      quantity: Number(it.quantity) || 0,
+      rate: Number(it.rate) || 0,
+      gst_rate: Number(it.gstRate) || 0,
+      cgst_amount: Number(it.cgstAmount) || 0,
+      sgst_amount: Number(it.sgstAmount) || 0,
+      igst_amount: Number(it.igstAmount) || 0,
+      position: i,
+    }))
+    const r3 = await supabase.from('credit_debit_note_items').insert(itemRows)
+    if (r3.error) throw r3.error
+  }
+
+  return id
+}
+
+export async function deleteCreditDebitNote(id) {
+  const userId = await requireUserId()
+  const { error } = await supabase.from('credit_debit_notes').delete().eq('user_id', userId).eq('id', id)
+  if (error) throw error
+}
+
+/* ============================================================
+ * Expense Bills
+ * ============================================================ */
+
+export async function saveExpenseBill(bill) {
+  const userId = await requireUserId()
+  const isUpdate = !!bill.id && (await rowExists('expense_bills', bill.id, userId))
+  const id = bill.id || newId()
+
+  const row = {
+    id,
+    user_id: userId,
+    bill_number: bill.billNumber || '',
+    bill_date: bill.billDate || null,
+    due_date: bill.dueDate || null,
+    vendor_id: bill.vendorId || null,
+    vendor_name: bill.vendorName || '',
+    vendor_gstin: bill.vendorGstin || '',
+    vendor_address: bill.vendorAddress || '',
+    branch_id: bill.branchId || null,
+    gst_type: bill.gstType || 'intra',
+    place_of_supply: bill.placeOfSupply || '',
+    discount: Number(bill.discount) || 0,
+    notes: bill.notes || '',
+    status: bill.status || 'draft',
+    created_at: bill.createdAt || new Date().toISOString(),
+  }
+
+  const r1 = await supabase.from('expense_bills').upsert(row)
+  if (r1.error) throw r1.error
+
+  if (isUpdate) {
+    const r2 = await supabase
+      .from('expense_bill_items')
+      .delete()
+      .eq('user_id', userId)
+      .eq('expense_bill_id', id)
+    if (r2.error) throw r2.error
+  }
+
+  if (bill.items?.length) {
+    const itemRows = bill.items.map((it, i) => ({
+      id: it.id || newId(),
+      expense_bill_id: id,
+      user_id: userId,
+      product_id: it.productId || null,
+      description: it.description || '',
+      hsn_code: it.hsnCode || '',
+      unit: it.unit || 'Nos',
+      quantity: Number(it.quantity) || 0,
+      rate: Number(it.rate) || 0,
+      gst_rate: Number(it.gstRate) || 0,
+      cgst_amount: Number(it.cgstAmount) || 0,
+      sgst_amount: Number(it.sgstAmount) || 0,
+      igst_amount: Number(it.igstAmount) || 0,
+      position: i,
+    }))
+    const r3 = await supabase.from('expense_bill_items').insert(itemRows)
+    if (r3.error) throw r3.error
+  }
+
+  return id
+}
+
+export async function deleteExpenseBill(id) {
+  const userId = await requireUserId()
+  const { error } = await supabase.from('expense_bills').delete().eq('user_id', userId).eq('id', id)
+  if (error) throw error
+}
+
+export async function updateExpenseBillStatus(id, status) {
+  const userId = await requireUserId()
+  const { error } = await supabase
+    .from('expense_bills')
+    .update({ status })
+    .eq('user_id', userId)
+    .eq('id', id)
+  if (error) throw error
+}
+
+/* ============================================================
+ * Vendors
+ * ============================================================ */
+
+export async function saveVendor(v) {
+  const userId = await requireUserId()
+  const row = {
+    id: v.id || newId(),
+    user_id: userId,
+    name: v.name || '',
+    gstin: v.gstin || '',
+    address: v.address || '',
+    contact_person: v.contactPerson || '',
+    email: v.email || '',
+    phone: v.phone || '',
+    notes: v.notes || '',
+  }
+  if (!v.id) row.created_at = new Date().toISOString()
+  const { error } = await supabase.from('vendors').upsert(row)
+  if (error) throw error
+}
+
+export async function deleteVendor(id) {
+  const userId = await requireUserId()
+  const { error } = await supabase.from('vendors').delete().eq('user_id', userId).eq('id', id)
+  if (error) throw error
+}
+
+/* ============================================================
  * Company + settings
  * ============================================================ */
 
@@ -625,5 +824,87 @@ function mapDCItem(it) {
     description: it.description ?? '',
     quantity: Number(it.quantity) || 0,
     unit: it.unit ?? 'Nos',
+  }
+}
+
+function mapCreditDebitNote(n) {
+  return {
+    id: n.id,
+    noteType: n.note_type ?? 'credit',
+    number: n.number ?? '',
+    noteDate: n.note_date,
+    originalInvoiceId: n.original_invoice_id ?? '',
+    originalInvoiceNumber: n.original_invoice_number ?? '',
+    customerId: n.customer_id ?? '',
+    customerBranchId: n.customer_branch_id ?? '',
+    branchId: n.branch_id ?? '',
+    reason: n.reason ?? '',
+    gstType: n.gst_type ?? 'intra',
+    placeOfSupply: n.place_of_supply ?? '',
+    discount: Number(n.discount) || 0,
+    notes: n.notes ?? '',
+    status: n.status ?? 'draft',
+    signingAuthority: n.signing_authority ?? '',
+    createdAt: n.created_at,
+  }
+}
+
+function mapCDNItem(it) {
+  return {
+    id: it.id,
+    productId: it.product_id ?? '',
+    description: it.description ?? '',
+    hsnCode: it.hsn_code ?? '',
+    unit: it.unit ?? 'Nos',
+    quantity: Number(it.quantity) || 0,
+    rate: Number(it.rate) || 0,
+    gstRate: Number(it.gst_rate) || 0,
+  }
+}
+
+function mapVendor(v) {
+  return {
+    id: v.id,
+    name: v.name ?? '',
+    gstin: v.gstin ?? '',
+    address: v.address ?? '',
+    contactPerson: v.contact_person ?? '',
+    email: v.email ?? '',
+    phone: v.phone ?? '',
+    notes: v.notes ?? '',
+    createdAt: v.created_at,
+  }
+}
+
+function mapExpenseBill(b) {
+  return {
+    id: b.id,
+    billNumber: b.bill_number ?? '',
+    billDate: b.bill_date,
+    dueDate: b.due_date,
+    vendorId: b.vendor_id ?? '',
+    vendorName: b.vendor_name ?? '',
+    vendorGstin: b.vendor_gstin ?? '',
+    vendorAddress: b.vendor_address ?? '',
+    branchId: b.branch_id ?? '',
+    gstType: b.gst_type ?? 'intra',
+    placeOfSupply: b.place_of_supply ?? '',
+    discount: Number(b.discount) || 0,
+    notes: b.notes ?? '',
+    status: b.status ?? 'draft',
+    createdAt: b.created_at,
+  }
+}
+
+function mapEBItem(it) {
+  return {
+    id: it.id,
+    productId: it.product_id ?? '',
+    description: it.description ?? '',
+    hsnCode: it.hsn_code ?? '',
+    unit: it.unit ?? 'Nos',
+    quantity: Number(it.quantity) || 0,
+    rate: Number(it.rate) || 0,
+    gstRate: Number(it.gst_rate) || 0,
   }
 }

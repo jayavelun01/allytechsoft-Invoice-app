@@ -10,6 +10,8 @@ const navGroups = [
     label: 'Documents',
     items: [
       { id: 'invoices', label: 'Invoices', icon: 'doc' },
+      { id: 'credit-debit-notes', label: 'Credit & Debit Notes', icon: 'cdn' },
+      { id: 'expense-bills', label: 'Expense Bills', icon: 'receipt' },
       { id: 'purchase-orders', label: 'Purchase Orders', icon: 'po' },
       { id: 'delivery-challans', label: 'Delivery Challans', icon: 'truck' },
     ],
@@ -18,6 +20,7 @@ const navGroups = [
     label: 'Master Data',
     items: [
       { id: 'customers', label: 'Customers', icon: 'users' },
+      { id: 'vendors', label: 'Vendors', icon: 'vendor' },
       { id: 'products', label: 'Products', icon: 'box' },
       { id: 'branches', label: 'Branches', icon: 'building' },
     ],
@@ -35,10 +38,13 @@ const Icon = ({ name, className = 'w-[18px] h-[18px]' }) => {
     doc: <path d="M5 3h7l4 4v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm7 0v4h4M7 11h6M7 14h6M7 17h4" />,
     po: <path d="M4 4h12v3H4zM4 9h12v8H4zM7 12h6M7 14h4" />,
     truck: <path d="M2 6h10v8H2zm10 3h4l2 2v3h-6zM5 16a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm10 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z" />,
+    cdn: <path d="M5 2h7l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm7 0v5h4M8 10l-2 2 2 2M12 10l2 2-2 2" />,
+    receipt: <path d="M5 2h10a1 1 0 0 1 1 1v13l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5V3a1 1 0 0 1 1-1zm2 5h6M7 10h6M7 13h4" />,
     users: <path d="M7 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm0 2c-2.8 0-5 1.7-5 4v2h10v-2c0-2.3-2.2-4-5-4zm9-2a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zm0 2c-1 0-2 .25-2.7.7.4.5.7 1 .7 1.6V18h6v-2c0-2-1.8-3.5-4-3.5z" />,
     box: <path d="M3 7l7-4 7 4v8l-7 4-7-4V7zm0 0l7 4 7-4M10 11v8" />,
     building: <path d="M4 18V4h12v14M7 7h2M11 7h2M7 11h2M11 11h2M7 15h2M11 15h2" />,
     gear: <path d="M10 6.5A3.5 3.5 0 1 0 10 13.5 3.5 3.5 0 0 0 10 6.5zm7-1l-1.5-1-.5-2-2 .5-1.5-1.5L10 2 8.5 1.5 7 3 5 2.5l-.5 2L3 5.5l.5 2-1 1.5L3 11l-.5 2 1 1.5-.5 2L5 17.5 7 17l1.5 1.5L10 18l1.5.5 1.5-1.5 2-.5.5-2 1.5-1L16 11l1-1.5-.5-2L17 5.5z" />,
+    vendor: <path d="M2 7h16M4 7l1 9h10l1-9M4 7l1-3h10l1 3M7 12h6M7 14.5h4" />,
     out: <path d="M13 4l-1 1v3h-2V5h-7v10h7v-3h2v3l1 1H4l-1-1V4l1-1zm5 6l-3-3v2h-5v2h5v2l3-3z" />,
   }
   return (
@@ -53,6 +59,8 @@ const isActive = (view, id) => {
   if (id === 'invoices' && view.startsWith('invoice')) return true
   if (id === 'purchase-orders' && view.startsWith('po')) return true
   if (id === 'delivery-challans' && view.startsWith('dc')) return true
+  if (id === 'credit-debit-notes' && view.startsWith('cdn')) return true
+  if (id === 'expense-bills' && view.startsWith('eb')) return true
   return false
 }
 

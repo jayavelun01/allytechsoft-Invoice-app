@@ -16,6 +16,13 @@ import PurchaseOrderView from './components/PurchaseOrderView'
 import DeliveryChallans from './components/DeliveryChallans'
 import DeliveryChallanEditor from './components/DeliveryChallanEditor'
 import DeliveryChallanView from './components/DeliveryChallanView'
+import CreditDebitNotes from './components/CreditDebitNotes'
+import CreditDebitNoteEditor from './components/CreditDebitNoteEditor'
+import CreditDebitNoteView from './components/CreditDebitNoteView'
+import ExpenseBills from './components/ExpenseBills'
+import ExpenseBillEditor from './components/ExpenseBillEditor'
+import ExpenseBillView from './components/ExpenseBillView'
+import Vendors from './components/Vendors'
 import Settings from './components/Settings'
 import LoginPage from './components/LoginPage'
 
@@ -77,6 +84,8 @@ export default function App() {
   const openInvoice = (id) => navigate('invoice-view', id)
   const openPO = (id) => navigate('po-view', id)
   const openDC = (id) => navigate('dc-view', id)
+  const openCDN = (id) => navigate('cdn-view', id)
+  const openEB = (id) => navigate('eb-view', id)
 
   const ops = {
     // Branches
@@ -100,6 +109,16 @@ export default function App() {
     // DCs
     saveDeliveryChallan: async (dc) => { await db.saveDeliveryChallan(dc); refresh() },
     deleteDeliveryChallan: async (id) => { await db.deleteDeliveryChallan(id); refresh() },
+    // Credit / Debit Notes
+    saveCreditDebitNote: async (note) => { await db.saveCreditDebitNote(note); refresh() },
+    deleteCreditDebitNote: async (id) => { await db.deleteCreditDebitNote(id); refresh() },
+    // Expense Bills
+    saveExpenseBill: async (bill) => { await db.saveExpenseBill(bill); refresh() },
+    deleteExpenseBill: async (id) => { await db.deleteExpenseBill(id); refresh() },
+    updateExpenseBillStatus: async (id, s) => { await db.updateExpenseBillStatus(id, s); refresh() },
+    // Vendors
+    saveVendor: async (v) => { await db.saveVendor(v); refresh() },
+    deleteVendor: async (id) => { await db.deleteVendor(id); refresh() },
     // Company
     saveCompanyAndSettings: async (company, settings) => {
       await db.saveCompany(company)
@@ -202,7 +221,38 @@ export default function App() {
             <DeliveryChallanView data={data} dcId={selectedId} onNav={navigate} />
           )}
 
+          {view === 'credit-debit-notes' && (
+            <CreditDebitNotes data={data} ops={ops} onNav={navigate} onOpen={openCDN} />
+          )}
+          {(view === 'cdn-new-credit' || view === 'cdn-new-debit') && (
+            <CreditDebitNoteEditor
+              data={data} ops={ops} editingId={null}
+              defaultType={view === 'cdn-new-credit' ? 'credit' : 'debit'}
+              onNav={navigate} onOpen={openCDN}
+            />
+          )}
+          {view === 'cdn-edit' && (
+            <CreditDebitNoteEditor data={data} ops={ops} editingId={selectedId} defaultType="credit" onNav={navigate} onOpen={openCDN} />
+          )}
+          {view === 'cdn-view' && (
+            <CreditDebitNoteView data={data} noteId={selectedId} onNav={navigate} />
+          )}
+
+          {view === 'expense-bills' && (
+            <ExpenseBills data={data} ops={ops} onNav={navigate} onOpen={openEB} />
+          )}
+          {view === 'eb-new' && (
+            <ExpenseBillEditor data={data} ops={ops} editingId={null} onNav={navigate} onOpen={openEB} />
+          )}
+          {view === 'eb-edit' && (
+            <ExpenseBillEditor data={data} ops={ops} editingId={selectedId} onNav={navigate} onOpen={openEB} />
+          )}
+          {view === 'eb-view' && (
+            <ExpenseBillView data={data} billId={selectedId} onNav={navigate} />
+          )}
+
           {view === 'customers' && <Customers data={data} ops={ops} />}
+          {view === 'vendors' && <Vendors data={data} ops={ops} />}
           {view === 'products' && <Products data={data} ops={ops} />}
           {view === 'branches' && <Branches data={data} ops={ops} />}
           {view === 'settings' && <Settings data={data} ops={ops} />}

@@ -253,7 +253,7 @@ export default function GSTDashboard({ data }) {
               />
               <ReturnBtn
                 label="Credit Notes (CDNR)"
-                hint="CDNR / CDNUR — currently empty (no credit notes tracked)"
+                hint="CDNR / CDNUR — credit &amp; debit notes for this branch + period"
                 disabled={!canDownload}
                 onClick={makeDownloadHandler(generateCDNR, 'CDNR')}
               />
@@ -262,8 +262,8 @@ export default function GSTDashboard({ data }) {
             <p className="text-xs text-mute mt-4">
               JSON files match the GSTN offline tool schema and can be uploaded at{' '}
               <span className="font-mono">gst.gov.in → Returns → Offline Tools</span>.
-              ITC fields in GSTR-3B are set to zero — purchase tracking is not available in this app.
-              Credit note (CDNR) support will be added in a future update.
+              ITC fields in GSTR-3B are set to zero — use the Expense Bills section to track inward purchases separately.
+              CDNR includes all issued/non-cancelled credit &amp; debit notes for the selected branch and period.
             </p>
           </>
         )}

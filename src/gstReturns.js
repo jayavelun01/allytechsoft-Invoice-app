@@ -501,20 +501,67 @@ export function summarizeGSTR3B(data, branchId, period) {
 }
 
 /**
- * Standalone Credit Notes JSON (CDNR / CDNUR).
- * Currently generates an empty but valid structure — the app does not yet track
- * credit/debit notes as a separate entity. Add credit note records here once
- * that feature is available.
+ * Standalone Credit/Debit Notes JSON (CDNR / CDNUR).
+ * CDNR = notes issued to registered taxpayers (have GSTIN).
+ * CDNUR = notes issued to unregistered buyers.
  */
 export function generateCDNR(data, branchId, period) {
   const branch = data.branches.find((b) => b.id === branchId)
   if (!branch?.gstin) throw new Error('Selected branch must have a GSTIN.')
+
+  const mm = parseInt(period.slice(0, 2), 10)
+  const yyyy = parseInt(period.slice(2), 10)
+
+  const eligible = (data.creditDebitNotes || []).filter((note) => {
+    if (note.branchId !== branchId) return false
+    if (note.status === 'draft' || note.status === 'cancelled') return false
+    if (!note.noteDate) return false
+    const d = new Date(note.noteDate)
+    return d.getMonth() + 1 === mm && d.getFullYear() === yyyy
+  })
+
+  const resolveGSTIN = (note) => {
+    const cb = (data.customerBranches || []).find((b) => b.id === note.customerBranchId)
+    const cust = (data.customers || []).find((c) => c.id === note.customerId)
+    return cb?.gstin || cust?.gstin || ''
+  }
+
+  // CDNR — registered (have GSTIN)
+  const cdnrMap = {}
+  // CDNUR — unregistered
+  const cdnur = []
+
+  for (const note of eligible) {
+    const gstin = resolveGSTIN(note)
+    const ntty = note.noteType === 'credit' ? 'C' : 'D'
+    const totals = calcInvoice(note)
+    const pos = getStateCode(note.placeOfSupply)
+    const entry = {
+      ntty,
+      nt_num: note.number,
+      nt_dt: fmtGSTDate(note.noteDate),
+      val: r2(totals.total),
+      pos,
+      rchrg: 'N',
+      inv_typ: 'R',
+      itms: buildItms(note),
+    }
+    if (gstin) {
+      if (!cdnrMap[gstin]) cdnrMap[gstin] = []
+      cdnrMap[gstin].push(entry)
+    } else {
+      cdnur.push({ typ: totals.total > 250000 ? 'B2CL' : 'OE', ...entry })
+    }
+  }
+
+  const cdnr = Object.entries(cdnrMap).map(([ctin, nt]) => ({ ctin, nt }))
+
   return {
     version: 'GST3.0.4',
     hash: 'hash',
     gstin: branch.gstin,
     fp: period,
-    cdnr: [],  // Credit/debit notes to registered taxpayers
-    cdnur: [], // Credit/debit notes to unregistered buyers
+    cdnr,
+    cdnur,
   }
 }

@@ -47,8 +47,8 @@ export const STATE_BY_CODE = INDIAN_STATES.reduce((acc, s) => {
   return acc
 }, {})
 
-/** GST slabs commonly applicable. */
-export const GST_SLABS = [0, 5, 12, 18, 28]
+/** GST slabs applicable under Indian GST (5% and 28% removed as inapplicable). */
+export const GST_SLABS = [0, 12, 18]
 
 /** Common units for products. */
 export const UNITS = ['Nos', 'Pcs', 'Kg', 'g', 'Ltr', 'mL', 'Hrs', 'Days', 'Mtr', 'Sqft', 'Box', 'Set']

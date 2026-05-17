@@ -116,3 +116,76 @@ export const blankDCItem = () => ({
   unit: 'Nos',
   quantity: 1,
 })
+
+export const blankCreditDebitNote = (noteType = 'credit') => ({
+  id: newId(),
+  noteType,
+  number: '',
+  noteDate: todayISO(),
+  originalInvoiceId: '',
+  originalInvoiceNumber: '',
+  customerId: '',
+  customerBranchId: '',
+  branchId: '',
+  reason: '',
+  gstType: 'intra',
+  placeOfSupply: '',
+  discount: 0,
+  notes: '',
+  status: 'draft',
+  signingAuthority: '',
+  items: [blankCreditDebitNoteItem()],
+  createdAt: new Date().toISOString(),
+})
+
+export const blankCreditDebitNoteItem = () => ({
+  id: newId(),
+  productId: '',
+  description: '',
+  hsnCode: '',
+  unit: 'Nos',
+  quantity: 1,
+  rate: 0,
+  gstRate: 18,
+})
+
+export const blankVendor = () => ({
+  id: newId(),
+  name: '',
+  gstin: '',
+  address: '',
+  contactPerson: '',
+  email: '',
+  phone: '',
+  notes: '',
+})
+
+export const blankExpenseBill = () => ({
+  id: newId(),
+  billNumber: '',
+  billDate: todayISO(),
+  dueDate: plusDaysISO(30),
+  vendorId: '',
+  vendorName: '',
+  vendorGstin: '',
+  vendorAddress: '',
+  branchId: '',
+  gstType: 'intra',
+  placeOfSupply: '',
+  discount: 0,
+  notes: '',
+  status: 'draft',
+  items: [blankExpenseBillItem()],
+  createdAt: new Date().toISOString(),
+})
+
+export const blankExpenseBillItem = () => ({
+  id: newId(),
+  productId: '',
+  description: '',
+  hsnCode: '',
+  unit: 'Nos',
+  quantity: 1,
+  rate: 0,
+  gstRate: 18,
+})
